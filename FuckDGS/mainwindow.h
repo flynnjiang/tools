@@ -17,13 +17,18 @@ public:
 
 private slots:
     void on_pushButtonSelect_clicked();
-
     void on_pushButtonFuck_clicked();
+
+    void showTips(const QString &tips);
+    bool decryptFile(const QString &filePath);
+    bool isEncryptFile(const QString &filePath);
+    bool IsDecryptSucess(const QString &oldFile, const QString &newFile);
+
 
 private:
     Ui::MainWindow *ui;
 
-    QString fpath;
+    QString filePath;
 };
 
 #endif // MAINWINDOW_H

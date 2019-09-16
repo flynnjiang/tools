@@ -6,9 +6,11 @@
 
 QT       += core gui
 
+RC_ICONS = logo.ico
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = FuckDGS
+TARGET = wpp
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -41,3 +43,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     Init.bat
+
+RESOURCES += \
+    background.qrc
