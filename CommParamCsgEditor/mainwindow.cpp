@@ -159,43 +159,43 @@ void MainWindow::syncFormToParam(int mnc)
 
     snprintf(cfg.stDialParam[mnc][1].ucAPNName,
             sizeof(cfg.stDialParam[mnc][1].ucAPNName),
-            "%s", ui->lineEditAPN1->text().toStdString().c_str());
+            "%s", ui->lineEditAPN2->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][1].ucUserName,
             sizeof(cfg.stDialParam[mnc][1].ucUserName),
-            "%s", ui->lineEditUsername1->text().toStdString().c_str());
+            "%s", ui->lineEditUsername2->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][1].ucUserPasswd,
             sizeof(cfg.stDialParam[mnc][1].ucUserPasswd),
-            "%s", ui->lineEditPassword1->text().toStdString().c_str());
+            "%s", ui->lineEditPassword2->text().toStdString().c_str());
 
     snprintf(cfg.stDialParam[mnc][2].ucAPNName,
             sizeof(cfg.stDialParam[mnc][2].ucAPNName),
-            "%s", ui->lineEditAPN2->text().toStdString().c_str());
+            "%s", ui->lineEditAPN3->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][2].ucUserName,
             sizeof(cfg.stDialParam[mnc][2].ucUserName),
-            "%s", ui->lineEditUsername2->text().toStdString().c_str());
+            "%s", ui->lineEditUsername3->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][2].ucUserPasswd,
             sizeof(cfg.stDialParam[mnc][2].ucUserPasswd),
-            "%s", ui->lineEditPassword2->text().toStdString().c_str());
+            "%s", ui->lineEditPassword3->text().toStdString().c_str());
 
     snprintf(cfg.stDialParam[mnc][3].ucAPNName,
             sizeof(cfg.stDialParam[mnc][3].ucAPNName),
-            "%s", ui->lineEditAPN3->text().toStdString().c_str());
+            "%s", ui->lineEditAPN4->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][3].ucUserName,
             sizeof(cfg.stDialParam[mnc][3].ucUserName),
-            "%s", ui->lineEditUsername3->text().toStdString().c_str());
+            "%s", ui->lineEditUsername4->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][3].ucUserPasswd,
             sizeof(cfg.stDialParam[mnc][3].ucUserPasswd),
-            "%s", ui->lineEditPassword3->text().toStdString().c_str());
+            "%s", ui->lineEditPassword4->text().toStdString().c_str());
 
     snprintf(cfg.stDialParam[mnc][4].ucAPNName,
             sizeof(cfg.stDialParam[mnc][4].ucAPNName),
-            "%s", ui->lineEditAPN4->text().toStdString().c_str());
+            "%s", ui->lineEditAPN5->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][4].ucUserName,
             sizeof(cfg.stDialParam[mnc][4].ucUserName),
-            "%s", ui->lineEditUsername4->text().toStdString().c_str());
+            "%s", ui->lineEditUsername5->text().toStdString().c_str());
     snprintf(cfg.stDialParam[mnc][4].ucUserPasswd,
             sizeof(cfg.stDialParam[mnc][4].ucUserPasswd),
-            "%s", ui->lineEditPassword4->text().toStdString().c_str());
+            "%s", ui->lineEditPassword5->text().toStdString().c_str());
 }
 
 
