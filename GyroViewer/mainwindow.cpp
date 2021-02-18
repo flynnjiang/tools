@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
-    this->setWindowTitle(QString("天仪陀螺仪&磁强计 ") + QString(__DATE__));
+    this->setWindowTitle(QString("GyroViewer ") + QString(__DATE__));
 
     m_readerThread.setCan(&m_tyCan);
     m_readerThread.setAcqFreq(ui->spinBox_AcqFreq->value());
