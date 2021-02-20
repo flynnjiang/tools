@@ -116,24 +116,24 @@ void MainWindow::recvRawTeleData(QVariant var)
     int i = 0, j = 0;
     static int cnt = 0;
     double value = 0.0;
-    struct gyro_tele_raw_rsp data = var.value<struct gyro_tele_raw_rsp>();
+    struct ty_gyr_tele_data data = var.value<struct ty_gyr_tele_data>();
     std::string now = QTime::currentTime().toString("hh:mm:ss.zzz").toStdString();
 
     cnt++;
 
     for (i = 0; i < 2; i++) {
 
-        fprintf(m_magFile[i], "\n%s,%.2lf", now.c_str(), (double)qFromBigEndian(data.mag_raw[i].temp) / 100);
-        fprintf(m_gyrFile[i], "\n%s,%.2lf", now.c_str(), (double)qFromBigEndian(data.gyro_raw[i].data.temp) / 100);
-        fprintf(m_accFile[i], "\n%s,%.2lf", now.c_str(), (double)qFromBigEndian(data.gyro_raw[i].data.temp) / 100);
+        fprintf(m_magFile[i], "\n%s,%.2lf", now.c_str(), (double)qFromBigEndian(data.mag[i].temp) / 100.0);
+        fprintf(m_gyrFile[i], "\n%s,%.2lf", now.c_str(), (double)qFromBigEndian(data.gyr[i].temp) / 100.0);
+        fprintf(m_accFile[i], "\n%s,%.2lf", now.c_str(), (double)qFromBigEndian(data.gyr[i].temp) / 100.0);
 
         for (j = 0; j < 3; j++) {
-            value = (double)qFromBigEndian(data.mag_raw[i].data[j]) * 0.0625; // 0.0625mG/LSB
+            value = (double)qFromBigEndian(data.mag[i].data[j]) * 0.0625; // 0.0625mG/LSB
             fprintf(m_magFile[i], ",%lf", value);
             m_magData[i][j].addData(cnt, value);
             m_magPlot[i][j]->graph(0)->setData(m_magData[i][j].m_key, m_magData[i][j].m_val);
             m_magPlot[i][j]->xAxis->setLabel(QString("当前:") + QString::number(value)
-                                           + QString(" | 原始:") + QString::number(qFromBigEndian(data.mag_raw[i].data[j]))
+                                           + QString(" | 原始:") + QString::number(qFromBigEndian(data.mag[i].data[j]))
                                            + QString(" | 振幅:") + QString::number(m_magData[i][j].m_val_max - m_magData[i][j].m_val_min));
             m_magPlot[i][j]->xAxis->setRange(m_magData[i][j].m_key_min, MAX(DATA_MAX_NUM, m_magData[i][j].m_key_max));
             m_magPlot[i][j]->yAxis->setRange((int32_t)(m_magData[i][j].m_val_min)  / 10 * 10 - 20,
@@ -141,12 +141,12 @@ void MainWindow::recvRawTeleData(QVariant var)
             m_magPlot[i][j]->replot();
 
 
-            value = (double)qFromBigEndian(data.gyro_raw[i].data.gyro[j]) * 0.1 / 65536.0; // 0.1/65536°/sec/LSB
+            value = (double)qFromBigEndian(data.gyr[i].gyr[j]) * 0.1 / 65536.0; // 0.1/65536°/sec/LSB
             fprintf(m_gyrFile[i], ",%lf", value);
             m_gyrData[i][j].addData(cnt, value);
             m_gyrPlot[i][j]->graph(0)->setData(m_gyrData[i][j].m_key, m_gyrData[i][j].m_val);
             m_gyrPlot[i][j]->xAxis->setLabel(QString("当前:") + QString::number(value)
-                                           + QString(" | 原始:") + QString::number(qFromBigEndian(data.gyro_raw[i].data.gyro[j]))
+                                           + QString(" | 原始:") + QString::number(qFromBigEndian(data.gyr[i].gyr[j]))
                                            + QString(" | 振幅:") + QString::number(m_gyrData[i][j].m_val_max - m_gyrData[i][j].m_val_min));
             m_gyrPlot[i][j]->xAxis->setRange(m_gyrData[i][j].m_key_min, MAX(DATA_MAX_NUM, m_gyrData[i][j].m_key_max));
             m_gyrPlot[i][j]->yAxis->setRange((int32_t)(m_gyrData[i][j].m_val_min) - 1,
@@ -155,11 +155,11 @@ void MainWindow::recvRawTeleData(QVariant var)
 
 
 
-            value = (double)qFromBigEndian(data.gyro_raw[i].data.accl[j]) * 1.25 / 65536.0; // 1.25/65536 mg/LSB
+            value = (double)qFromBigEndian(data.gyr[i].acc[j]) * 1.25 / 65536.0; // 1.25/65536 mg/LSB
             fprintf(m_accFile[i], ",%lf", value);
             m_accData[i][j].addData(cnt, value);
             m_accPlot[i][j]->xAxis->setLabel(QString("当前:") + QString::number(value)
-                                           + QString(" | 原始:") + QString::number(qFromBigEndian(data.gyro_raw[i].data.accl[j]))
+                                           + QString(" | 原始:") + QString::number(qFromBigEndian(data.gyr[i].acc[j]))
                                            + QString(" | 振幅:") + QString::number(m_accData[i][j].m_val_max - m_accData[i][j].m_val_min));
             m_accPlot[i][j]->xAxis->setRange(m_accData[i][j].m_key_min, MAX(DATA_MAX_NUM, m_accData[i][j].m_key_max));
             m_accPlot[i][j]->yAxis->setRange((int32_t)(m_accData[i][j].m_val_min)  / 10 * 10 - 20,
@@ -171,12 +171,46 @@ void MainWindow::recvRawTeleData(QVariant var)
         fflush(m_magFile[i]);
         fflush(m_gyrFile[i]);
         fflush(m_accFile[i]);
+
     }
 
-    ui->lcdNumber_Gyr0->display((double)qFromBigEndian(data.gyro_raw[0].data.temp) / 100);
-    ui->lcdNumber_Gyr1->display((double)qFromBigEndian(data.gyro_raw[1].data.temp) / 100);
-    ui->lcdNumber_Mag0->display((double)qFromBigEndian(data.mag_raw[0].temp) / 100);
-    ui->lcdNumber_Mag1->display((double)qFromBigEndian(data.mag_raw[1].temp) / 100);
+    if (data.mag_stat[0]) {
+        ui->label_Mag0Valid->setText("有效");
+        ui->label_Mag0Valid->setStyleSheet("background-color: green;");
+    } else {
+        ui->label_Mag0Valid->setText("无效");
+        ui->label_Mag0Valid->setStyleSheet("background-color: red;");
+    }
+
+    if (data.mag_stat[1]) {
+        ui->label_Mag1Valid->setText("有效");
+        ui->label_Mag1Valid->setStyleSheet("background-color: green;");
+    } else {
+        ui->label_Mag1Valid->setText("无效");
+        ui->label_Mag1Valid->setStyleSheet("background-color: red;");
+    }
+
+    if (data.gyr_stat[0]) {
+        ui->label_Gyr0Valid->setText("有效");
+        ui->label_Gyr0Valid->setStyleSheet("background-color: green;");
+    } else {
+        ui->label_Gyr0Valid->setText("无效");
+        ui->label_Gyr0Valid->setStyleSheet("background-color: red;");
+    }
+
+    if (data.gyr_stat[1]) {
+        ui->label_Gyr1Valid->setText("有效");
+        ui->label_Gyr1Valid->setStyleSheet("background-color: green;");
+    } else {
+        ui->label_Gyr1Valid->setText("无效");
+        ui->label_Gyr1Valid->setStyleSheet("background-color: red;");
+    }
+
+    ui->lcdNumber_Gyr0->display((double)qFromBigEndian(data.gyr[0].temp) / 100.0);
+    ui->lcdNumber_Gyr1->display((double)qFromBigEndian(data.gyr[1].temp) / 100.0);
+    ui->lcdNumber_Mag0->display((double)qFromBigEndian(data.mag[0].temp) / 100.0);
+    ui->lcdNumber_Mag1->display((double)qFromBigEndian(data.mag[1].temp) / 100.0);
+    ui->lcdNumber_Time->display((double)qFromBigEndian(data.time) / 1000.0);
 }
 
 

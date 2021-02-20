@@ -25,7 +25,7 @@ namespace Ui {
 }
 
 
-Q_DECLARE_METATYPE(gyro_tele_raw_rsp);
+Q_DECLARE_METATYPE(ty_gyr_tele_data);
 
 
 
@@ -58,8 +58,8 @@ public:
 
     void setAcqFreq(uint8_t freq)
     {
-        if (freq < 4) {
-            m_acqFreq = 4;
+        if (freq < 1) {
+            m_acqFreq = 1;
         } else if (freq > 100) {
             m_acqFreq = 100;
         } else {
@@ -77,7 +77,7 @@ public:
         QVariant var;
         struct ty_can_frame rsp;
         struct ty_can_frame req;
-        struct gyro_tele_raw_rsp rawTele;
+        struct ty_gyr_tele_data data;
         qint64 now = 0;
         qint64 time = 0;
 
@@ -91,7 +91,7 @@ public:
         req.can_id.ext.info = 0;
         req.can_id.ext.type = 0x01;
         req.data_type = 0x0;
-        req.data_id = 0x02;
+        req.data_id = 0x01;
         req.data_len = 6;
 
         m_isRunning = true;
@@ -106,12 +106,12 @@ public:
             if (m_tyCan->recvFrame(&rsp, 1000)) {
 
                 if (0x06 == rsp.can_id.ext.src
-                        && 0x35 == rsp.data_type && 2 == rsp.data_id
-                        && sizeof(struct gyro_tele_raw_rsp) == rsp.data_len)
+                        && 0x35 == rsp.data_type && 1 == rsp.data_id
+                        && sizeof(data) == rsp.data_len)
                 {
 
-                    memcpy(&rawTele, rsp.data, sizeof(struct gyro_tele_raw_rsp));
-                    var.setValue(rawTele);
+                    memcpy(&data, rsp.data, sizeof(data));
+                    var.setValue(data);
                     emit sendRawTeleData(var);
                 }
             }
