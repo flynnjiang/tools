@@ -210,7 +210,37 @@ void MainWindow::recvRawTeleData(QVariant var)
     ui->lcdNumber_Gyr1->display((double)qFromBigEndian(data.gyr[1].temp) / 100.0);
     ui->lcdNumber_Mag0->display((double)qFromBigEndian(data.mag[0].temp) / 100.0);
     ui->lcdNumber_Mag1->display((double)qFromBigEndian(data.mag[1].temp) / 100.0);
-    ui->lcdNumber_Time->display((double)qFromBigEndian(data.time) / 1000.0);
+
+    ui->label_SysTime->setText(QString::number((double)((uint32_t)qFromBigEndian(data.time)) / 1000.0, 'f', 3));
+    ui->label_CanOkCnt->setText(QString::number(data.can_ok_cnt));
+    ui->label_CanErrCnt->setText(QString::number(data.can_err_cnt));
+    ui->label_TeleCnt->setText(QString::number(data.req_cnt));
+    ui->label_LastestCmd->setText(QString::number(data.lastest_cmd));
+    ui->label_Param1->setText(QString::number((int32_t)qFromBigEndian(data.param32[0])));
+    ui->label_Param2->setText(QString::number((int32_t)qFromBigEndian(data.param32[1])));
+    ui->label_Param3->setText(QString::number((int32_t)qFromBigEndian(data.param32[2])));
+    ui->label_Param4->setText(QString::number((int16_t)qFromBigEndian(data.param16)));
+
+    switch (data.param_id) {
+        case 1:   ui->label_ParamId->setText("陀螺仪1原始数据"); break;
+        case 2:   ui->label_ParamId->setText("陀螺仪2原始数据"); break;
+        case 4:   ui->label_ParamId->setText("加速度计1原始数据"); break;
+        case 5:   ui->label_ParamId->setText("加速度计2原始数据"); break;
+        case 51:  ui->label_ParamId->setText("磁强计1SET数据"); break;
+        case 52:  ui->label_ParamId->setText("磁强计1RESET数据"); break;
+        case 53:  ui->label_ParamId->setText("磁强计1原始数据"); break;
+        case 54:  ui->label_ParamId->setText("磁强计2SET数据"); break;
+        case 55:  ui->label_ParamId->setText("磁强计2RESET数据"); break;
+        case 56:  ui->label_ParamId->setText("磁强计2原始数据"); break;
+        case 60:  ui->label_ParamId->setText("磁强计1零偏校准"); break;
+        case 61:  ui->label_ParamId->setText("磁强计2零偏校准"); break;
+        case 62:  ui->label_ParamId->setText("磁强计1比例校准"); break;
+        case 63:  ui->label_ParamId->setText("磁强计2比例校准"); break;
+        case 101: ui->label_ParamId->setText("系统启动信息"); break;
+        case 102: ui->label_ParamId->setText("内存信息"); break;
+        default:  ui->label_ParamId->setText("未知标识"); break;
+    }
+
 }
 
 

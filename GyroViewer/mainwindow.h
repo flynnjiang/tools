@@ -143,18 +143,23 @@ class AxisData
 public:
     AxisData(int size = DATA_MAX_NUM)
     {
-        m_size = size;
+        m_max_size = size;
 
+        m_key_max = 0.0;
+        m_key_min = 0.0;
+        m_val_max = 0.0;
+        m_val_min = 0.0;
+    }
+
+    ~AxisData() {
         m_key.clear();
         m_val.clear();
 
-        m_key_max = 0;
-        m_key_min = 0;
-        m_val_max = 0;
-        m_val_min = 0;
+        m_key_max = 0.0;
+        m_key_min = 0.0;
+        m_val_max = 0.0;
+        m_val_min = 0.0;
     }
-
-    ~AxisData() {}
 
     void clear(void)
     {
@@ -171,7 +176,7 @@ public:
     {
         int i = 0;
 
-        if (m_key.size() >= m_size) {
+        if (m_key.size() >= m_max_size) {
             m_key.pop_front();
             m_val.pop_front();
         }
@@ -179,6 +184,7 @@ public:
         m_key.push_back(key);
         m_val.push_back(val);
 
+        /* 重新计算最大值和最小值 */
         m_key_max = m_key[0];
         m_key_min = m_key[0];
         m_val_max = m_val[0];
@@ -193,13 +199,13 @@ public:
     }
 
 public:
-    int m_size;
-    QVector<double> m_key;
-    QVector<double> m_val;
-    double m_key_max;
-    double m_key_min;
-    double m_val_max;
-    double m_val_min;
+    int m_max_size;         /**< 数组最大大小 */
+    QVector<double> m_key;  /**< KEY数组 */
+    QVector<double> m_val;  /**< VALUE数组 */
+    double m_key_max;       /**< KEY的最大值 */
+    double m_key_min;       /**< KEY的最小值 */
+    double m_val_max;       /**< VALUE的最大值 */
+    double m_val_min;       /**< VALUE的最小值 */
 
 };
 
