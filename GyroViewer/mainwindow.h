@@ -15,9 +15,31 @@
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define ABS(n)   ((n) > 0 ? (n) : (-1 * (n)))
 
 
 #define DATA_MAX_NUM 200
+
+
+struct TyGryData {
+    bool valid;
+    double gyr[3];
+    double acc[3];
+    double temp;
+};
+
+struct TyMagData {
+    bool valid;
+    double data[3];
+    double temp;
+};
+
+struct TyGyrMagData {
+    uint32_t time;
+    struct TyGryData gyr[2];
+    struct TyMagData mag[2];
+};
+
 
 
 namespace Ui {
@@ -210,6 +232,20 @@ public:
 };
 
 
+enum TyCaliStateEnum {
+    TY_CALI_STATE_OFF = 0,  /**< 未进行校准 */
+    TY_CALI_STATE_INIT,     /**< 校准初始状态 */
+    TY_CALI_STATE_GYR,      /**< 陀螺仪校准阶段 */
+    TY_CALI_STATE_MAG,      /**< 磁强计校准阶段 */
+    TY_CALI_STATE_DONE,     /**< 校准完成状态 */
+    TY_CALI_STATE_CANCEL,   /**< 取消校准过渡态 */
+};
+
+struct MagCaliData {
+    double m[3][3]; /**< 零偏矩阵 */
+    double v[3];    /**< 零偏向量 */
+};
+
 
 class MainWindow : public QMainWindow
 {
@@ -222,7 +258,7 @@ public:
     void showTips(const QString &tips);
 
 public slots:
-    void recvRawTeleData(QVariant var);
+    void recvTeleData(QVariant var);
 
 
 private slots:
@@ -231,29 +267,64 @@ private slots:
     void on_pushButton_ResetDev_clicked();
     void on_spinBox_AcqFreq_valueChanged(int arg1);
     void on_comboBox_WorkMode_currentIndexChanged(int index);
+    void on_pushButton_cali_clicked();
+    void on_pushButton_saveCaliData_clicked();
+    void on_pushButton_caliCancel_clicked();
 
 private:
     void clearData(void);
+    bool ConvertTeleData(const struct ty_gyr_tele_data *tele, struct TyGyrMagData *data);
+    bool CaliInit(void);
+    bool CaliRun(struct TyGyrMagData *data);
+
 
 
 private:
     Ui::MainWindow *ui;
 
-    TyCan m_tyCan;
+    TyCan m_tyCan;                  /**< CAN收发器 */
 
-    DataRecvThread m_readerThread;
+    DataRecvThread m_readerThread;  /**< 数据读取线程 */
 
-    FILE *m_gyrFile[2];
-    FILE *m_magFile[2];
-    FILE *m_accFile[2];
+    FILE *m_gyrFile[2];             /**< 陀螺仪数据保存文件 */
+    FILE *m_magFile[2];             /**< 磁强计数据保存文件 */
+    FILE *m_accFile[2];             /**< 加速度计数据保存文件 */
 
-    AxisData m_magData[2][3];
-    AxisData m_gyrData[2][3];
-    AxisData m_accData[2][3];
 
-    QCustomPlot *m_gyrPlot[2][3];
-    QCustomPlot *m_accPlot[2][3];
-    QCustomPlot *m_magPlot[2][3];
+    /***************************************************************************
+     * 图标绘画相关
+     ***************************************************************************/
+    AxisData m_magData[2][3];       /**< 磁强计坐绘画数据 */
+    AxisData m_gyrData[2][3];       /**< 陀螺仪坐绘画数据 */
+    AxisData m_accData[2][3];       /**< 加速度计绘画数据 */
+
+    QCustomPlot *m_gyrPlot[2][3];   /**< 陀螺仪的曲线图像 */
+    QCustomPlot *m_accPlot[2][3];   /**< 加速度计的曲线图像 */
+    QCustomPlot *m_magPlot[2][3];   /**< 磁强计的曲线图像 */
+
+
+    /**************************************************************************
+     * 校准相关
+     **************************************************************************/
+    enum TyCaliStateEnum m_caliState;               /**< 校准状态 */
+
+    QTime m_caliStartTime;                          /**< 校准开始时间 */
+
+    QVector<struct TyGyrMagData> m_caliGyrMagData;  /**< 磁强计/陀螺仪校准所需的数据 */
+
+    double m_caliGyrBias[2][3];                     /**< 陀螺仪的零偏，单位：角度/秒 */
+    QLabel *m_caliGyrBiasLabel[2][3];               /**< 陀螺仪的零偏显示控件 */
+
+    double m_caliGyrdegCur[3];                      /**< 陀螺仪的当前旋转角度 */
+    double m_caliGyrdegMin[3];                      /**< 陀螺仪的旋转角度最小值 */
+    double m_caliGyrdegMax[3];                      /**< 陀螺仪的旋转角度最大值 */
+    QProgressBar *m_caliGyrDegProgressBar[3];       /**< 陀螺仪的旋转角度显示控件 */
+
+    double m_caliMagCaliXk[2][12];                  /**< 磁强计的校准参数 */
+    double m_caliMagCaliPk[2][144];                 /**< 磁强计的校准中间变量 */
+    QDoubleSpinBox *m_caliMagParamSpinBox[2][12];   /**< 磁强计的偏差矩阵显示控件 */
 };
+
+
 
 #endif // MAINWINDOW_H

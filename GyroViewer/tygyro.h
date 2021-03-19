@@ -43,6 +43,13 @@ struct __attribute__ ((__packed__)) ty_gyr_tele_data {
     uint8_t  param_id;		/**< 可选参数标识 */
 };
 
+/** MMC5983 校准数据 */
+struct __attribute__((__packed__)) mmc5983_cali_data {
+    int32_t v[3];	/**< 零偏向量 */
+    double m[3][3];  /**< 零偏矩阵 */
+};
+
+
 #pragma pack(4)
 
 

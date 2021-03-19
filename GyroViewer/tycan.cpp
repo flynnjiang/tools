@@ -39,7 +39,7 @@ bool TyCan::openDev(int devType, int devId, int chId)
 
     retVal = OpenDevice(m_devType, m_devId, m_chId);
     if (1 != retVal) {
-        printf("OpenDevice error\n");
+        qDebug("OpenDevice error");
         return false;
     }
 
@@ -52,26 +52,26 @@ bool TyCan::openDev(int devType, int devId, int chId)
     cfg.Mode = 0;
     retVal = InitCAN(m_devType, m_devId, m_chId, &cfg);
     if (1 != retVal) {
-        printf("初始化CAN适配器失败！\n");
+        qDebug("初始化CAN适配器失败！");
         return false;
     }
 
     memset(&m_info, 0, sizeof(m_info));
     retVal = ReadBoardInfo(m_devType, m_devId, &m_info);
     if (! retVal) {
-        printf("读取CAN适配器信息失败！\n");
+        qDebug("读取CAN适配器信息失败！");
         return false;
     }
 
     retVal = StartCAN(m_devType, m_devId, m_chId);
     if (! retVal) {
-        printf("启动CAN通道失败！\n");
+        qDebug("启动CAN通道失败！");
         return false;
     }
 
     m_isOpen = true;
 
-    printf("CAN启动成功!\n");
+    qDebug("CAN启动成功!");
 
     return true;
 }
@@ -110,14 +110,99 @@ bool TyCan::resetDev(void)
 
 bool TyCan::sendFrame(const struct ty_can_frame *f)
 {
+    int i = 0;
     ULONG retVal = 0;
     CAN_OBJ obj;
     ty_can_id_t can_id;
+    uint16_t len;
+    uint16_t tx_bytes = 0;
+    uint8_t crc = 0;
 
 
     if (f->data_len > 6) { /* 复合帧 */
-        /* TODO */
-        return false;
+
+        /* 发送首帧 */
+        can_id.value = f->can_id.value;
+        can_id.ext.src = 0;
+        can_id.ext.info = 0;
+        can_id.ext.seq = m_frameSeq;
+        can_id.ext.type = 2;
+
+        memset(&obj, 0, sizeof(obj));
+        obj.ID = can_id.value;
+        obj.SendType = 0;
+        obj.RemoteFlag = 0;
+        obj.ExternFlag = 1;
+        obj.DataLen = 8;
+
+        len = (uint16_t)qToBigEndian((uint16_t)(f->data_len + 2));
+        memcpy(obj.Data, &len, sizeof(len));
+
+        obj.Data[2] = f->data_type;
+        obj.Data[3] = f->data_id;
+
+        memcpy(&obj.Data[4], f->data, 4);
+        tx_bytes = 4;
+
+        Transmit(m_devType, m_devId, m_chId, &obj, 1);
+
+
+        /* 发送中间帧 */
+        while ((f->data_len - tx_bytes) >= 8) {
+
+            can_id.value = f->can_id.value;
+            can_id.ext.src = 0;
+            can_id.ext.info = 0;
+            can_id.ext.seq = m_frameSeq;
+            can_id.ext.type = 3;
+
+            memset(&obj, 0, sizeof(obj));
+            obj.ID = can_id.value;
+            obj.SendType = 0;
+            obj.RemoteFlag = 0;
+            obj.ExternFlag = 1;
+            obj.DataLen = 8;
+
+            memcpy(obj.Data, f->data + tx_bytes, 8);
+            tx_bytes += 8;
+
+            Transmit(m_devType, m_devId, m_chId, &obj, 1);
+        }
+
+
+        /* 发送尾帧 */
+        can_id.value = f->can_id.value;
+        can_id.ext.src = 0;
+        can_id.ext.info = 0;
+        can_id.ext.seq = m_frameSeq;
+        can_id.ext.type = 3;
+
+        memset(&obj, 0, sizeof(obj));
+        obj.ID = can_id.value;
+        obj.SendType = 0;
+        obj.RemoteFlag = 0;
+        obj.ExternFlag = 1;
+        obj.DataLen = f->data_len - tx_bytes;
+        memcpy(obj.Data, f->data + tx_bytes, obj.DataLen);
+        tx_bytes += obj.DataLen;
+
+        /* CRC */
+        crc = (len & 0xFF);
+        crc += ((len >> 8) & 0xFF);
+        crc += f->data_type;
+        crc += f->data_id;
+        for (i = 0; i < f->data_len; i++) {
+            crc += f->data[i];
+        }
+        obj.Data[obj.DataLen] = crc;
+        obj.DataLen++;
+
+        Transmit(m_devType, m_devId, m_chId, &obj, 1);
+
+        m_frameSeq++;
+
+
+        return true;
 
     } else { /* 单帧 */
         memset(&obj, 0, sizeof(obj));
@@ -167,7 +252,7 @@ bool TyCan::GetFrameFromBuffer(struct ty_can_frame *f)
 
         case 2: // 复合帧的起始帧
             if (hasLongFrame) {
-                printf("May Drop some frames\n");
+                qDebug("May Drop some frames");
             }
 
             hasLongFrame = true;
@@ -197,7 +282,7 @@ bool TyCan::GetFrameFromBuffer(struct ty_can_frame *f)
                     return true;
                 } else if (frame.data_len > longFrameSize) {
                     // 错误帧需要丢弃
-                    printf("Drop frame, frame.data_len = %u, longFrameSize = %u\n", frame.data_len, longFrameSize);
+                    qDebug("Drop frame, frame.data_len = %u, longFrameSize = %u", frame.data_len, longFrameSize);
                     hasLongFrame = false;
                     longFrameSize = 0;
                     m_objs.remove(0, i + 1); // 从缓冲区移除已处理的帧
@@ -234,7 +319,7 @@ bool TyCan::recvFrame(struct ty_can_frame *f, int timeout_ms)
         return false;
     }
 
-    printf("Receive: %d\n", retVal);
+    //qDebug("Receive: %d", retVal);
 
     for (i = 0; i < retVal; i++) {
         can_id.value = objs[i].ID;
