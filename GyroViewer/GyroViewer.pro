@@ -86,7 +86,7 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
-LIBS += -L../ -lECanVci
+LIBS += -L$$PWD -lECanVci
 
 DISTFILES += \
     logo.ico \
